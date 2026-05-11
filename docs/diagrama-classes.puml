@@ -1,0 +1,138 @@
+@startuml diagrama-classes
+!theme cerulean-outline
+
+title Projeto Banco — Diagrama de Classes\nFIAP Engenharia de Software 3ESR 2026
+
+' ── Agência ────────────────────────────────────────────────────────────────
+class Agencia {
+  +int Id
+  +string Nome
+  +string Codigo
+  +string Cidade
+  +string Estado
+  +ICollection<Cliente> Clientes
+}
+
+' ── Cliente (abstrato + herança TPH) ────────────────────────────────────────
+abstract class Cliente {
+  +int Id
+  +string Nome
+  +string Email
+  +string Telefone
+  +DateTime DataCadastro
+  +int AgenciaId
+  +Agencia Agencia
+  +ICollection<Contratacao> Contratacoes
+}
+
+class PessoaFisica {
+  +string CPF
+  +DateTime DataNascimento
+  +int ScoreCredito
+}
+
+class PessoaJuridica {
+  +string CNPJ
+  +string RazaoSocial
+  +string SetorAtuacao
+}
+
+Cliente <|-- PessoaFisica : "<<discriminator>> PF"
+Cliente <|-- PessoaJuridica : "<<discriminator>> PJ"
+
+' ── Produto (abstrato + herança TPH) ────────────────────────────────────────
+abstract class Produto {
+  +int Id
+  +string Nome
+  +string Descricao
+  +bool Ativo
+}
+
+class MaquinaDeCartao {
+  +decimal TaxaMDR
+  +string Modelo
+  +bool NecessitaAtivacaoFisica
+  ' Regra extra: taxa MDR variável por setor
+}
+
+class Emprestimo {
+  +decimal ValorMinimo
+  +decimal ValorMaximo
+  +int PrazoMaximoMeses
+  +decimal TaxaJurosMensalBase
+  ' Regra extra: taxa de juros por score de crédito
+}
+
+class ReceberSalario {
+  +string EmpresaConveniada
+}
+
+Produto <|-- MaquinaDeCartao : "<<discriminator>> MAQUINA"
+Produto <|-- Emprestimo : "<<discriminator>> EMPRESTIMO"
+Produto <|-- ReceberSalario : "<<discriminator>> SALARIO"
+
+' ── Contratação ──────────────────────────────────────────────────────────────
+enum StatusContratacao {
+  PENDENTE
+  APROVADA
+  RECUSADA
+}
+
+class Contratacao {
+  +int Id
+  +DateTime DataSolicitacao
+  +DateTime? DataProcessamento
+  +StatusContratacao Status
+  +string? MotivoRecusa
+  +int ClienteId
+  +int ProdutoId
+  +decimal? ValorSolicitado
+  +int? PrazoMeses
+  +decimal? TaxaAplicada
+}
+
+Contratacao --> StatusContratacao
+Contratacao "N" --> "1" Cliente
+Contratacao "N" --> "1" Produto
+Cliente "N" --> "1" Agencia
+
+' ── Serviços ─────────────────────────────────────────────────────────────────
+interface IRabbitMQPublisher {
+  +PublicarContratacao(msg: ContratacaoMensagemDto)
+}
+
+class RabbitMQPublisher {
+  -IConnection _connection
+  -IModel _channel
+  +PublicarContratacao(msg)
+  ' Exchange: banco.contratacoes (topic)
+  ' Filas: contratacao.maquina / contratacao.emprestimo / contratacao.salario
+}
+
+interface IRegrasProdutoService {
+  +AvaliarMaquinaDeCartao(cliente, produto)
+  +AvaliarEmprestimo(cliente, produto, valor, prazo)
+  +CalcularScoreCredito(pf)
+  +CalcularTaxaMDR(setor)
+  +CalcularTaxaJuros(score)
+}
+
+class RegrasProdutoService {
+  ' Score mínimo Maquina PF: 400
+  ' Score mínimo Empréstimo PF: 600
+  ' Taxa MDR: VAREJO 1.5%, SERVICOS 2%, TECNOLOGIA 2.2%, outros 2.5%
+  ' Taxa juros: score≥900→0.99%, ≥800→1.29%, ≥700→1.59%, ≥600→1.99%
+}
+
+class ContratacaoConsumerService <<BackgroundService>> {
+  ' Consome filas RabbitMQ (ACK manual)
+  ' Executa regras de negócio
+  ' Atualiza status PENDENTE → APROVADA/RECUSADA
+}
+
+IRabbitMQPublisher <|.. RabbitMQPublisher
+IRegrasProdutoService <|.. RegrasProdutoService
+ContratacaoConsumerService --> IRegrasProdutoService
+ContratacoesController --> IRabbitMQPublisher
+
+@enduml

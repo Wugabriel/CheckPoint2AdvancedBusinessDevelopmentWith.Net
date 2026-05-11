@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: banco-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI (guest/guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: banco-jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"   # Jaeger agent (thrift compact) — usado pelo OpenTelemetry
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"     # Jaeger UI
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_PORT: "9411"
+
+# Nota: Oracle é o banco remoto FIAP (oracle.fiap.com.br:1521/ORCL).
+# Não sobe Oracle local — use as credenciais RM individuais no appsettings.json.
