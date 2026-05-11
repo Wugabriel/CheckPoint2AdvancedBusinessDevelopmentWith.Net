@@ -1,6 +1,5 @@
 # Projeto Banco — API com Mensageria
 
-> **FIAP | Engenharia de Software 3ESR | 2026**  
 > Atividade Avaliativa — Backend de banco digital com .NET 8, Oracle, RabbitMQ e OpenTelemetry.
 
 ---
@@ -9,9 +8,9 @@
 
 | Nome Completo | RM |
 |---|---|
-| *(Integrante 1 — preencher)* | RM000001 |
-| *(Integrante 2 — preencher)* | RM000002 |
-| *(Integrante 3 — preencher)* | RM000003 |
+| *Fábio Henrique de Souza Eduardo* | RM560416 |
+| *Gabriel Wu Castro* | RM560210 |
+| *Renato Kenji Sugaki* | RM559810 |
 
 ---
 
@@ -224,8 +223,6 @@ Swagger disponível em: http://localhost:5000
 dotnet test src/ProjetoBanco.Tests --logger "console;verbosity=detailed"
 ```
 
-> *(Inserir print do resultado aqui após executar)*
-
 **Cobertura dos fluxos críticos:**
 - ✅ Cadastro PF com validação CPF duplicado
 - ✅ Cadastro PJ com validação CNPJ duplicado
@@ -241,8 +238,6 @@ dotnet test src/ProjetoBanco.Tests --logger "console;verbosity=detailed"
 
 ## 8. Painel RabbitMQ
 
-> *(Inserir print do painel http://localhost:15672 mostrando filas e mensagens processadas)*
-
 Filas esperadas após primeira contratação:
 - `contratacao.maquina`
 - `contratacao.emprestimo`
@@ -251,8 +246,6 @@ Filas esperadas após primeira contratação:
 ---
 
 ## 9. Swagger com Contratação Aprovada
-
-> *(Inserir print do Swagger em http://localhost:5000 com GET /api/contratacoes/{id} retornando status APROVADA)*
 
 ---
 
